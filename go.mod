@@ -1,3 +1,3 @@
-module github.com/rohmanhakim/retry
+module github.com/rohmanhakim/retrier
 
 go 1.24.4

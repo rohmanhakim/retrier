@@ -1,6 +1,6 @@
-# retry
+# retrier
 
-[![codecov](https://codecov.io/github/rohmanhakim/retry/branch/master/graph/badge.svg?token=eYWKQEsSzz)](https://codecov.io/github/rohmanhakim/retry)
+[![codecov](https://codecov.io/github/rohmanhakim/retrier/branch/master/graph/badge.svg?token=eYWKQEsSzz)](https://codecov.io/github/rohmanhakim/retrier)
 [![Go Reference](https://pkg.go.dev/badge/github.com/rohmanhakim/retry.svg)](https://pkg.go.dev/github.com/rohmanhakim/retry)
 
 A simple, standalone Go package for retrying operations with exponential backoff and jitter support. Zero external dependencies.
@@ -17,7 +17,7 @@ A simple, standalone Go package for retrying operations with exponential backoff
 ## Installation
 
 ```bash
-go get github.com/rohmanhakim/retry
+go get github.com/rohmanhakim/retrier
 ```
 
 ## Quick Start
@@ -29,7 +29,7 @@ import (
     "fmt"
     "time"
     
-    "github.com/rohmanhakim/retry"
+    "github.com/rohmanhakim/retrier"
 )
 
 // Define a custom error that implements RetryableError
@@ -41,19 +41,19 @@ func (e *NetworkError) Error() string {
     return e.msg
 }
 
-func (e *NetworkError) RetryPolicy() retry.RetryPolicy {
-    return retry.RetryPolicyAuto // Will be retried automatically
+func (e *NetworkError) RetryPolicy() retrier.RetryPolicy {
+    return retrier.RetryPolicyAuto // Will be retried automatically
 }
 
 func main() {
     // Configure retry parameters
-    backoffParam := retry.NewBackoffParam(
+    backoffParam := retrier.NewBackoffParam(
         1*time.Second,  // Initial delay
         2.0,            // Multiplier (doubles each time)
         30*time.Second, // Maximum delay
     )
     
-    params := retry.NewRetryParam(
+    params := retrier.NewRetryParam(
         100*time.Millisecond, // Base delay
         50*time.Millisecond,  // Jitter
         42,                   // Random seed
@@ -62,7 +62,7 @@ func main() {
     )
     
     // Define the operation to retry
-    fn := func() (string, retry.RetryableError) {
+    fn := func() (string, retrier.RetryableError) {
         // Your operation here
         // Return RetryPolicyAuto error for transient failures
         // Return RetryPolicyManual or RetryPolicyNever for permanent failures
@@ -70,7 +70,7 @@ func main() {
     }
     
     // Execute with retry
-    result := retry.Retry(params, retry.NewNoOpLogger(), fn)
+    result := retrier.Retry(params, retrier.NewNoOpLogger(), fn)
     
     if result.IsSuccess() {
         fmt.Printf("Success: %s (attempts: %d)\n", result.Value(), result.Attempts())
@@ -104,11 +104,11 @@ func (e *MyError) Error() string {
     return e.msg
 }
 
-func (e *MyError) RetryPolicy() retry.RetryPolicy {
+func (e *MyError) RetryPolicy() retrier.RetryPolicy {
     if e.transient {
-        return retry.RetryPolicyAuto
+        return retrier.RetryPolicyAuto
     }
-    return retry.RetryPolicyNever
+    return retrier.RetryPolicyNever
 }
 ```
 
@@ -132,7 +132,7 @@ func (l *MyLogger) LogRetry(ctx context.Context, attempt, maxAttempts int, backo
 }
 ```
 
-Use `retry.NewNoOpLogger()` for zero-overhead when logging is not needed.
+Use `retrier.NewNoOpLogger()` for zero-overhead when logging is not needed.
 
 ## API Reference
 

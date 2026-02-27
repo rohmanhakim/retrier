@@ -1,5 +1,5 @@
-// Package retry provides a generic retry mechanism with exponential backoff and jitter.
-package retry
+// Package retrier provides a generic retry mechanism with exponential backoff and jitter.
+package retrier
 
 import "fmt"
 

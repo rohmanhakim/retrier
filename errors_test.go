@@ -1,10 +1,10 @@
-package retry_test
+package retrier_test
 
 import (
 	"errors"
 	"testing"
 
-	"github.com/rohmanhakim/retry"
+	retrier "github.com/rohmanhakim/retrier"
 )
 
 // TestRetryError_NewRetryError tests the creation of RetryError with various parameters.
@@ -13,64 +13,64 @@ func TestRetryError_NewRetryError(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		cause       retry.RetryErrorCause
+		cause       retrier.RetryErrorCause
 		message     string
-		policy      retry.RetryPolicy
+		policy      retrier.RetryPolicy
 		wrapped     error
-		wantCause   retry.RetryErrorCause
+		wantCause   retrier.RetryErrorCause
 		wantMessage string
-		wantPolicy  retry.RetryPolicy
+		wantPolicy  retrier.RetryPolicy
 		wantWrapped bool
 	}{
 		{
 			name:        "ErrZeroAttempt with auto policy",
-			cause:       retry.ErrZeroAttempt,
+			cause:       retrier.ErrZeroAttempt,
 			message:     "cannot retry with zero attempts",
-			policy:      retry.RetryPolicyAuto,
+			policy:      retrier.RetryPolicyAuto,
 			wrapped:     innerErr,
-			wantCause:   retry.ErrZeroAttempt,
+			wantCause:   retrier.ErrZeroAttempt,
 			wantMessage: "cannot retry with zero attempts",
-			wantPolicy:  retry.RetryPolicyAuto,
+			wantPolicy:  retrier.RetryPolicyAuto,
 			wantWrapped: true,
 		},
 		{
 			name:        "ErrExhaustedAttempts with manual policy",
-			cause:       retry.ErrExhaustedAttempts,
+			cause:       retrier.ErrExhaustedAttempts,
 			message:     "max retries exceeded",
-			policy:      retry.RetryPolicyManual,
+			policy:      retrier.RetryPolicyManual,
 			wrapped:     innerErr,
-			wantCause:   retry.ErrExhaustedAttempts,
+			wantCause:   retrier.ErrExhaustedAttempts,
 			wantMessage: "max retries exceeded",
-			wantPolicy:  retry.RetryPolicyManual,
+			wantPolicy:  retrier.RetryPolicyManual,
 			wantWrapped: true,
 		},
 		{
 			name:        "ErrExhaustedAttempts with never policy",
-			cause:       retry.ErrExhaustedAttempts,
+			cause:       retrier.ErrExhaustedAttempts,
 			message:     "permanent failure",
-			policy:      retry.RetryPolicyNever,
+			policy:      retrier.RetryPolicyNever,
 			wrapped:     nil,
-			wantCause:   retry.ErrExhaustedAttempts,
+			wantCause:   retrier.ErrExhaustedAttempts,
 			wantMessage: "permanent failure",
-			wantPolicy:  retry.RetryPolicyNever,
+			wantPolicy:  retrier.RetryPolicyNever,
 			wantWrapped: false,
 		},
 		{
 			name:        "nil wrapped error",
-			cause:       retry.ErrZeroAttempt,
+			cause:       retrier.ErrZeroAttempt,
 			message:     "test",
-			policy:      retry.RetryPolicyNever,
+			policy:      retrier.RetryPolicyNever,
 			wrapped:     nil,
-			wantCause:   retry.ErrZeroAttempt,
+			wantCause:   retrier.ErrZeroAttempt,
 			wantMessage: "test",
-			wantPolicy:  retry.RetryPolicyNever,
+			wantPolicy:  retrier.RetryPolicyNever,
 			wantWrapped: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := retry.NewRetryError(tt.cause, tt.message, tt.policy, tt.wrapped)
+			err := retrier.NewRetryError(tt.cause, tt.message, tt.policy, tt.wrapped)
 
 			if err.Cause != tt.wantCause {
 				t.Errorf("Cause = %v, want %v", err.Cause, tt.wantCause)
@@ -102,35 +102,35 @@ func TestRetryError_Error(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		cause        retry.RetryErrorCause
+		cause        retrier.RetryErrorCause
 		message      string
 		wrapped      error
 		wantContains []string
 	}{
 		{
 			name:         "with wrapped error",
-			cause:        retry.ErrExhaustedAttempts,
+			cause:        retrier.ErrExhaustedAttempts,
 			message:      "max retries exceeded",
 			wrapped:      innerErr,
 			wantContains: []string{"retry error", "exhausted attempt", "max retries exceeded", "original error"},
 		},
 		{
 			name:         "without wrapped error",
-			cause:        retry.ErrZeroAttempt,
+			cause:        retrier.ErrZeroAttempt,
 			message:      "zero attempts not allowed",
 			wrapped:      nil,
 			wantContains: []string{"retry error", "zero attempt", "zero attempts not allowed"},
 		},
 		{
 			name:         "empty message with wrapped",
-			cause:        retry.ErrExhaustedAttempts,
+			cause:        retrier.ErrExhaustedAttempts,
 			message:      "",
 			wrapped:      innerErr,
 			wantContains: []string{"retry error", "exhausted attempt"},
 		},
 		{
 			name:         "empty message without wrapped",
-			cause:        retry.ErrZeroAttempt,
+			cause:        retrier.ErrZeroAttempt,
 			message:      "",
 			wrapped:      nil,
 			wantContains: []string{"retry error", "zero attempt"},
@@ -139,7 +139,7 @@ func TestRetryError_Error(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := retry.NewRetryError(tt.cause, tt.message, retry.RetryPolicyAuto, tt.wrapped)
+			err := retrier.NewRetryError(tt.cause, tt.message, retrier.RetryPolicyAuto, tt.wrapped)
 			errStr := err.Error()
 
 			for _, want := range tt.wantContains {
@@ -156,13 +156,13 @@ func TestRetryError_Unwrap(t *testing.T) {
 	innerErr := errors.New("network error")
 
 	// Test with wrapped error
-	err := retry.NewRetryError(retry.ErrExhaustedAttempts, "max retries", retry.RetryPolicyManual, innerErr)
+	err := retrier.NewRetryError(retrier.ErrExhaustedAttempts, "max retries", retrier.RetryPolicyManual, innerErr)
 	if err.Unwrap() != innerErr {
 		t.Errorf("Unwrap() = %v, want %v", err.Unwrap(), innerErr)
 	}
 
 	// Test with nil wrapped error
-	errNil := retry.NewRetryError(retry.ErrZeroAttempt, "test", retry.RetryPolicyNever, nil)
+	errNil := retrier.NewRetryError(retrier.ErrZeroAttempt, "test", retrier.RetryPolicyNever, nil)
 	if errNil.Unwrap() != nil {
 		t.Errorf("Unwrap() = %v, want nil", errNil.Unwrap())
 	}
@@ -170,15 +170,15 @@ func TestRetryError_Unwrap(t *testing.T) {
 
 // TestRetryError_RetryPolicy tests that RetryPolicy() returns the cached policy.
 func TestRetryError_RetryPolicy(t *testing.T) {
-	policies := []retry.RetryPolicy{
-		retry.RetryPolicyAuto,
-		retry.RetryPolicyManual,
-		retry.RetryPolicyNever,
+	policies := []retrier.RetryPolicy{
+		retrier.RetryPolicyAuto,
+		retrier.RetryPolicyManual,
+		retrier.RetryPolicyNever,
 	}
 
 	for _, policy := range policies {
 		t.Run("policy", func(t *testing.T) {
-			err := retry.NewRetryError(retry.ErrExhaustedAttempts, "test", policy, nil)
+			err := retrier.NewRetryError(retrier.ErrExhaustedAttempts, "test", policy, nil)
 			if err.RetryPolicy() != policy {
 				t.Errorf("RetryPolicy() = %v, want %v", err.RetryPolicy(), policy)
 			}
@@ -188,10 +188,10 @@ func TestRetryError_RetryPolicy(t *testing.T) {
 
 // TestRetryError_Is tests the Is() method for errors.Is support.
 func TestRetryError_Is(t *testing.T) {
-	err := retry.NewRetryError(retry.ErrExhaustedAttempts, "test", retry.RetryPolicyManual, nil)
+	err := retrier.NewRetryError(retrier.ErrExhaustedAttempts, "test", retrier.RetryPolicyManual, nil)
 
 	// Should match RetryError
-	if !err.Is(&retry.RetryError{}) {
+	if !err.Is(&retrier.RetryError{}) {
 		t.Error("Is() should return true for RetryError target")
 	}
 
@@ -209,10 +209,10 @@ func TestRetryError_Is(t *testing.T) {
 // TestRetryError_ImplementsRetryableError verifies that RetryError implements
 // the RetryableError interface.
 func TestRetryError_ImplementsRetryableError(t *testing.T) {
-	err := retry.NewRetryError(retry.ErrZeroAttempt, "test", retry.RetryPolicyAuto, nil)
+	err := retrier.NewRetryError(retrier.ErrZeroAttempt, "test", retrier.RetryPolicyAuto, nil)
 
 	// Verify all interface methods exist and return valid values
-	var _ retry.RetryableError = err
+	var _ retrier.RetryableError = err
 
 	// Verify basic interface contract
 	if err.Error() == "" {
@@ -225,14 +225,14 @@ func TestRetryError_ImplementsRetryableError(t *testing.T) {
 
 // TestRetryError_Causes tests both RetryErrorCause constants.
 func TestRetryError_Causes(t *testing.T) {
-	causes := []retry.RetryErrorCause{
-		retry.ErrZeroAttempt,
-		retry.ErrExhaustedAttempts,
+	causes := []retrier.RetryErrorCause{
+		retrier.ErrZeroAttempt,
+		retrier.ErrExhaustedAttempts,
 	}
 
 	for _, cause := range causes {
 		t.Run(string(cause), func(t *testing.T) {
-			err := retry.NewRetryError(cause, "test", retry.RetryPolicyAuto, nil)
+			err := retrier.NewRetryError(cause, "test", retrier.RetryPolicyAuto, nil)
 			if err.Cause != cause {
 				t.Errorf("Cause = %v, want %v", err.Cause, cause)
 			}
@@ -243,7 +243,7 @@ func TestRetryError_Causes(t *testing.T) {
 // TestRetryError_ErrorChain tests errors.Is and errors.As support.
 func TestRetryError_ErrorChain(t *testing.T) {
 	innerErr := errors.New("original error")
-	err := retry.NewRetryError(retry.ErrExhaustedAttempts, "max retries", retry.RetryPolicyManual, innerErr)
+	err := retrier.NewRetryError(retrier.ErrExhaustedAttempts, "max retries", retrier.RetryPolicyManual, innerErr)
 
 	// Test errors.Is
 	if !errors.Is(err, innerErr) {
@@ -251,7 +251,7 @@ func TestRetryError_ErrorChain(t *testing.T) {
 	}
 
 	// Test errors.As
-	var retryErr *retry.RetryError
+	var retryErr *retrier.RetryError
 	if !errors.As(err, &retryErr) {
 		t.Error("errors.As should find RetryError")
 	}
