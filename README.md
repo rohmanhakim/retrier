@@ -243,12 +243,73 @@ func (l *MyLogger) Enabled() bool {
     return true
 }
 
-func (l *MyLogger) LogRetry(ctx context.Context, attempt, maxAttempts int, backoff time.Duration, err error) {
+func (l *MyLogger) LogRetry(ctx context.Context, attempt, maxAttempts int, backoff time.Duration, err error, attrs ...any) {
     if err != nil {
         log.Printf("Retry %d/%d: backoff=%v, error=%v", attempt, maxAttempts, backoff, err)
     } else {
         log.Printf("Success on attempt %d/%d", attempt, maxAttempts)
     }
+}
+```
+
+### Using Attributes
+
+The `attrs` parameter follows Go's `slog` convention for structured logging - it accepts alternating key-value pairs. This allows you to add custom context to your log entries:
+
+```go
+import (
+    "log/slog"
+    "time"
+)
+
+// SlogLogger integrates with Go's structured logging (Go 1.21+)
+type SlogLogger struct {
+    logger *slog.Logger
+}
+
+func (l *SlogLogger) Enabled() bool {
+    return true
+}
+
+func (l *SlogLogger) LogRetry(ctx context.Context, attempt, maxAttempts int, backoff time.Duration, err error, attrs ...any) {
+    // Build log attributes
+    args := []any{
+        "attempt", attempt,
+        "max_attempts", maxAttempts,
+        "backoff", backoff.Milliseconds(),
+    }
+    
+    // Append user-provided attributes (if any)
+    args = append(args, attrs...)
+    
+    if err != nil {
+        args = append(args, "error", err.Error())
+        l.logger.Warn("retry attempt", args...)
+    } else {
+        l.logger.Info("retry success", args...)
+    }
+}
+```
+
+You can pass additional context when implementing your own logging:
+
+```go
+// In your custom logger implementation, you can enrich logs with:
+// - operation names
+// - timing information
+// - request IDs
+// - any custom metadata
+
+func (l *MyLogger) LogRetry(ctx context.Context, attempt, maxAttempts int, backoff time.Duration, err error, attrs ...any) {
+    // attrs might contain: "operation", "db_query", "request_id", "abc123"
+    // Process attrs as alternating key-value pairs
+    fields := make(map[string]any)
+    for i := 0; i < len(attrs)-1; i += 2 {
+        if key, ok := attrs[i].(string); ok {
+            fields[key] = attrs[i+1]
+        }
+    }
+    // Now fields = {"operation": "db_query", "request_id": "abc123"}
 }
 ```
 
@@ -295,7 +356,7 @@ func (r Result[T]) Attempts() int               // number of attempts
 // DebugLogger interface for logging
 type DebugLogger interface {
     Enabled() bool
-    LogRetry(ctx context.Context, attempt, maxAttempts int, backoff time.Duration, err error)
+    LogRetry(ctx context.Context, attempt, maxAttempts int, backoff time.Duration, err error, attrs ...any)
 }
 ```
 

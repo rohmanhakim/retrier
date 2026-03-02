@@ -20,7 +20,9 @@ type DebugLogger interface {
 	//   - maxAttempts: maximum number of attempts allowed
 	//   - backoff: the delay before the next retry (0 for success/exhausted)
 	//   - err: the error that triggered the retry (nil on success)
-	LogRetry(ctx context.Context, attempt int, maxAttempts int, backoff time.Duration, err error)
+	//   - attrs: optional alternating key-value pairs (string, any, string, any, ...)
+	//     following Go's slog convention for structured logging.
+	LogRetry(ctx context.Context, attempt int, maxAttempts int, backoff time.Duration, err error, attrs ...any)
 }
 
 // NoOpLogger is a no-operation implementation of DebugLogger.
@@ -37,5 +39,5 @@ func NewNoOpLogger() *NoOpLogger {
 func (n *NoOpLogger) Enabled() bool { return false }
 
 // LogRetry is a no-op.
-func (n *NoOpLogger) LogRetry(_ context.Context, _ int, _ int, _ time.Duration, _ error) {
+func (n *NoOpLogger) LogRetry(_ context.Context, _ int, _ int, _ time.Duration, _ error, _ ...any) {
 }

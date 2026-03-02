@@ -29,7 +29,7 @@ type backoffLogCall struct {
 
 func (m *backoffMockLogger) Enabled() bool { return m.enabled }
 
-func (m *backoffMockLogger) LogRetry(_ context.Context, attempt int, _ int, backoff time.Duration, _ error) {
+func (m *backoffMockLogger) LogRetry(_ context.Context, attempt int, _ int, backoff time.Duration, _ error, _ ...any) {
 	m.logRetryCalls = append(m.logRetryCalls, backoffLogCall{
 		attempt: attempt,
 		backoff: backoff,

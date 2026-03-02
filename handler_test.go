@@ -63,7 +63,7 @@ func (m *mockLogger) Enabled() bool {
 	return m.enabled
 }
 
-func (m *mockLogger) LogRetry(_ context.Context, attempt int, maxAttempt int, backoff time.Duration, err error) {
+func (m *mockLogger) LogRetry(_ context.Context, attempt int, maxAttempt int, backoff time.Duration, err error, _ ...any) {
 	m.logRetryCalls = append(m.logRetryCalls, logRetryCall{
 		attempt:    attempt,
 		maxAttempt: maxAttempt,
