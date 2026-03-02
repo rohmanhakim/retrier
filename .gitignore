@@ -28,3 +28,4 @@ go.work
 Thumbs.db
 # Added by goreleaser init:
 dist/
+example/fetch/fetch

@@ -382,6 +382,45 @@ func NewNoOpLogger() *NoOpLogger
 func NewRetryError(cause RetryErrorCause, message string, policy RetryPolicy, wrapped error) *RetryError
 ```
 
+## Examples
+
+A complete, runnable example is available in the `example/fetch/` directory that demonstrates:
+
+- **Fake HTTP Server**: A server that simulates failures on initial attempts, then succeeds
+- **Retry with Backoff**: Exponential backoff with jitter for failed requests
+- **Custom Logger**: A simple logger implementation showing retry progress
+
+### Running the Example
+
+```bash
+cd example/fetch && go run .
+```
+
+### Example Output
+
+```
+=== Retrier Example: HTTP Fetch with Retry ===
+
+🚀 Fake server started on http://localhost:8080
+   Will fail 3 attempt(s) before succeeding...
+
+📥 Received request #1
+[15:26:07.616] ❌ Attempt 1/4 failed: HTTP 500: Simulated failure - attempt 1
+[15:26:07.616]    ↳ Retrying in 503.052992ms...
+📥 Received request #2
+[15:26:08.120] ❌ Attempt 2/4 failed: HTTP 500: Simulated failure - attempt 2
+[15:26:08.120]    ↳ Retrying in 1.03579938s...
+📥 Received request #3
+[15:26:09.156] ❌ Attempt 3/4 failed: HTTP 500: Simulated failure - attempt 3
+[15:26:09.156]    ↳ Retrying in 2.039603414s...
+📥 Received request #4
+[15:26:11.197] ✅ Success on attempt 4/4
+
+=== Result ===
+✅ Success after 4 attempt(s)
+📄 Response: Success after 4 attempts! 🎉
+```
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
