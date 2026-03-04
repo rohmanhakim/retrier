@@ -4,3 +4,5 @@ go 1.24.4
 
 // v1.0.0 was released with errors and should not be used.
 retract v1.0.0
+
+require github.com/rohmanhakim/exponential-backoff v1.0.0

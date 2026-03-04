@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	exponentialbackoff "github.com/rohmanhakim/exponential-backoff"
 )
 
 // Retry executes the provided function with retry logic.
@@ -95,11 +97,17 @@ func Retry[T any](ctx context.Context, logger DebugLogger, fn func() (T, error),
 		}
 
 		// Compute delay for the next retry using exponential backoff with jitter
-		backoffDelay := exponentialBackoffDelay(
-			attempt,
-			config.jitter,
-			config.backoff,
+		// Ensure initialDuration doesn't exceed maxDuration for valid config
+		initialDuration := config.initialDuration
+		if initialDuration > config.maxDuration {
+			initialDuration = config.maxDuration
+		}
+		backoffConfig := exponentialbackoff.MustConfig(
+			initialDuration,
+			config.maxDuration,
+			config.multiplier,
 		)
+		backoffDelay := exponentialbackoff.CalculateDelay(attempt, config.jitter, backoffConfig)
 
 		// Log retry attempt if debug enabled
 		if logger.Enabled() {

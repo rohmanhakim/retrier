@@ -10,16 +10,11 @@ import (
 type retryConfig struct {
 	jitter             time.Duration
 	maxAttempts        int
-	backoff            backoffConfig
+	initialDuration    time.Duration
+	multiplier         float64
+	maxDuration        time.Duration
 	defaultRetryPolicy RetryPolicy
 	attrs              []any
-}
-
-// backoffConfig holds the internal configuration for exponential backoff.
-type backoffConfig struct {
-	initialDuration time.Duration
-	multiplier      float64
-	maxDuration     time.Duration
 }
 
 // defaults returns a retryConfig with sensible default values.
@@ -28,11 +23,9 @@ func defaults() retryConfig {
 		maxAttempts:        3,
 		jitter:             0,
 		defaultRetryPolicy: RetryPolicyAuto,
-		backoff: backoffConfig{
-			initialDuration: 1 * time.Second,
-			multiplier:      2.0,
-			maxDuration:     1 * time.Minute,
-		},
+		initialDuration:    1 * time.Second,
+		multiplier:         2.0,
+		maxDuration:        1 * time.Minute,
 	}
 }
 
@@ -59,7 +52,7 @@ func WithJitter(d time.Duration) RetryOption {
 // Default is 1 second.
 func WithInitialDuration(d time.Duration) RetryOption {
 	return func(c *retryConfig) {
-		c.backoff.initialDuration = d
+		c.initialDuration = d
 	}
 }
 
@@ -67,7 +60,7 @@ func WithInitialDuration(d time.Duration) RetryOption {
 // Each subsequent delay is multiplied by this value. Default is 2.0.
 func WithMultiplier(m float64) RetryOption {
 	return func(c *retryConfig) {
-		c.backoff.multiplier = m
+		c.multiplier = m
 	}
 }
 
@@ -75,7 +68,7 @@ func WithMultiplier(m float64) RetryOption {
 // Default is 1 minute.
 func WithMaxDuration(d time.Duration) RetryOption {
 	return func(c *retryConfig) {
-		c.backoff.maxDuration = d
+		c.maxDuration = d
 	}
 }
 
